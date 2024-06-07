@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beauty App</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 600px; margin: 0 auto; text-align: center; }
+        input[type="file"] { margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Beauty App</h1>
+        <input type="file" id="imageInput" accept="image/*">
+        <button onclick="applyMakeup()">Apply Make-up</button>
+        <img id="outputImage" src="" alt="Output Image" style="display:none; margin-top:20px;">
+    </div>
+    <script>
+        function applyMakeup() {
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append('image', file);
+
+                fetch('/apply-makeup', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.blob())
+                .then(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const outputImage = document.getElementById('outputImage');
+                    outputImage.src = url;
+                    outputImage.style.display = 'block';
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        }
+    </script>
+</body>
+</html>
+from flask import Flask, request, send_file
+from PIL import Image
+import io
+
+app = Flask(__name__)
+
+@app.route('/apply-makeup', methods=['POST'])
+def apply_makeup():
+    image = request.files['image']
+    img = Image.open(image)
+
+    # Here you would process the image, apply make-up, and accessories
+    # For now, we'll just return the original image
+    img_byte_arr = io.BytesIO()
+    img.save(img_byte_arr, format='JPEG')
+    img_byte_arr.seek(0)
+    return send_file(img_byte_arr, mimetype='image/jpeg')
+
+if __name__ == '__main__':
+    app.run(debug=True)
